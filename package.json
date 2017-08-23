@@ -1,5 +1,5 @@
 {
-  "name": "aurelia-leaflet-plugin",
+  "name": "aurelia-leaflet",
   "version": "0.1.0",
   "description": "An Aurelia plugin for LeafletJS.",
   "keywords": [
@@ -68,13 +68,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/array-analytics/aurelia-leaflet-plugin.git"
+    "url": "git+https://github.com/array-analytics/aurelia-leaflet.git"
   },
   "author": "Dwayne Charrington <dwaynecharrington@gmail.com>",
   "license": "MIT",
-  "homepage": "https://github.com/array-analytics/aurelia-leaflet-plugin#readme",
+  "homepage": "https://github.com/array-analytics/aurelia-leaflet#readme",
   "bugs": {
-    "url": "https://github.com/array-analytics/aurelia-leaflet-plugin/issues"
+    "url": "https://github.com/array-analytics/aurelia-leaflet/issues"
   },
   "jspm": {
     "registry": "npm",
