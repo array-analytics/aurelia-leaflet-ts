@@ -3,7 +3,8 @@ import { AULeafletCustomElement } from "./au-leaflet";
 
 export function configure(aurelia: FrameworkConfiguration) {
     //use it so tsc to AMD format won't complain.
-    AULeafletCustomElement;
+    if (AULeafletCustomElement) { }
+
     aurelia.globalResources([
         "./au-leaflet"
     ]);
