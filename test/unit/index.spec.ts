@@ -1,5 +1,5 @@
-describe('index', () => {
-    it('should work', () => {
+describe("index", () => {
+    it("should work", () => {
         expect(true)
     })
 })
