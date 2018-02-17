@@ -12,7 +12,7 @@ import { LeafLayer } from "../custom_typings/leaflet.d";
 export class AULeafletCustomElement {
 
     private _eventAggregator: EventAggregator;
-    private _element: HTMLElement;
+    
     private _layerFactory: LayerFactory;
 
     private _mapInit: Promise<any>;
@@ -31,10 +31,9 @@ export class AULeafletCustomElement {
         zoom: 13
     };
 
-    constructor(pEventAgg: EventAggregator, pElement: HTMLElement) {
+    constructor(pEventAgg: EventAggregator) {
         this._eventAggregator = pEventAgg;
-        this._element = pElement;
-
+        
         this._layerFactory = new LayerFactory();
 
         this._mapInit = new Promise((resolve, reject) => {
@@ -80,11 +79,13 @@ export class AULeafletCustomElement {
     public map: Map
 
 
-    public attachedLayers: { base: LayersObject, overlay: LayersObject; };
+    public attachedLayers: { base: any, overlay: any; };
 
     public layerControl: LayersControl;
 
     public scaleControl: ScaleControl;
+
+    public mapContainer: HTMLElement;
 
     private _layersChanged(newLayers: any, oldLayers: any) {
         if (oldLayers && oldLayers !== null) {
@@ -117,7 +118,7 @@ export class AULeafletCustomElement {
                     this.map.on(eventName, (e) => this._eventAggregator.publish("aurelia-leaflet", Object.assign(e, { map: this.map })));
                 }
             }
-            if (oldEvents !== null) {
+            if (oldEvents !== null && oldEvents !== undefined) {
                 for (let removedEvent of oldEvents.filter((e) => newEvents.indexOf(e) === -1)) {
                     this.map.off(removedEvent);
                 }
@@ -169,7 +170,7 @@ export class AULeafletCustomElement {
             var center = this.mapOptions.center;
             delete this.mapOptions.center;
             if (!this.map) {
-                this.map = new Map(this._element.firstElementChild as HTMLElement, this.mapOptions);
+                this.map = new Map(this.mapContainer, this.mapOptions);
             }
             this.mapOptions.center = center;
 
