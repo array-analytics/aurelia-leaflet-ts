@@ -8,16 +8,20 @@
       "dom"
     ],
     "outDir": "dist/commonjs",
-    "noImplicitAny": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "sourceMap": true,
+    //"declaration": true,
+    "removeComments": true,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "noImplicitReturns": true,
-    "strictNullChecks": true,
-    "declaration": true,
+    "strictNullChecks": false,
+    "emitDecoratorMetadata": true,
     "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
     "noEmitHelpers": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowJs": true
   },
   "exclude": [
     ".vscode",
