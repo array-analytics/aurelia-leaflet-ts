@@ -31,7 +31,7 @@ export class AULeafletCustomElement {
         },
         zoom: 13
     };
-    
+
     constructor(pEventAgg: EventAggregator, pElement: HTMLElement) {
         this._eventAggregator = pEventAgg;
         this._element = pElement;
@@ -50,40 +50,44 @@ export class AULeafletCustomElement {
 
         this.mapOptions = this._defaultMapOptions;
 
-/* {
-            base: [
-                {
-                    id: "OSM Tiles",
-                    type: "tile",
-                    url: "http://{s}.tile.osm.org/{z}/{x}/{y}.png",
-                    options: {
-                        attribution: "&copy; <a href=\"http://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
+        this.layers =
+            {
+                base: [
+                    {
+                        id: "OSM Tiles",
+                        type: "tile",
+                        url: "http://{s}.tile.osm.org/{z}/{x}/{y}.png",
+                        options: {
+                            attribution: "&copy; <a href=\"http://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
+                        }
                     }
-                }
-            ],
-            overlay: []
-        }; */
+                ],
+                overlay: []
+            };
     }
 
-    
-    @bindable 
+    @bindable({ changeHandler: "_layersChanged" })
+    public layers: any;
+
+    @bindable({ changeHandler: "_mapEventsChanged" })
     public mapEvents: string[]
-    @bindable 
+    @bindable({ changeHandler: "_mapOptionsChanged" })
     public mapOptions: MapOptions;
-    @bindable 
+    @bindable
     public withLayerControl: boolean;
-    @bindable 
+    @bindable
     public withScaleControl: boolean;
 
     public map: Map
+
 
     public attachedLayers: { base: LayersObject, overlay: LayersObject; };
 
     public layerControl: LayersControl;
 
-    public scaleControl : ScaleControl;
+    public scaleControl: ScaleControl;
 
-    layersChanged(newLayers: any, oldLayers: any) {
+    private _layersChanged(newLayers: any, oldLayers: any) {
         if (oldLayers && oldLayers !== null) {
             this.removeOldLayers(oldLayers.base, "base");
             this.removeOldLayers(oldLayers.overlay, "overlay");
@@ -91,7 +95,7 @@ export class AULeafletCustomElement {
         this.attachLayers();
     }
 
-    mapOptionsChanged(newOptions: MapOptions, oldOptions: MapOptions) {
+    private _mapOptionsChanged(newOptions: MapOptions, oldOptions: MapOptions) {
         this.mapOptions = Object.assign(this._defaultMapOptions, newOptions);
         // some options can get set on the map object after init
         this._mapInit.then(() => {
@@ -99,7 +103,7 @@ export class AULeafletCustomElement {
                 if (this.mapOptions.center !== oldOptions.center) {
                     this.map.setView(this.mapOptions.center, this.mapOptions.zoom);
                 }
-   
+
                 if (this.mapOptions.maxBounds !== oldOptions.maxBounds) {
                     this.map.setMaxBounds(this.mapOptions.maxBounds);
                 }
@@ -107,7 +111,7 @@ export class AULeafletCustomElement {
         });
     }
 
-    mapEventsChanged(newEvents, oldEvents) {
+    private _mapEventsChanged(newEvents, oldEvents) {
         this._mapInit.then(() => {
             if (newEvents && newEvents.length) {
                 for (let eventName of newEvents) {
@@ -119,7 +123,7 @@ export class AULeafletCustomElement {
                     this.map.off(removedEvent);
                 }
             }
-            
+
             this._eventsBoundResolve();
         });
     }
