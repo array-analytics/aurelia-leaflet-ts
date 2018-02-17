@@ -12,52 +12,43 @@ import { LeafLayer } from "../custom_typings/leaflet.d";
 @customElement("au-leaflet")
 export class AULeafletCustomElement {
 
-    private eventAggregator: EventAggregator;
-    private element: HTMLElement;
-    private layerFactory: LayerFactory;
+    private _eventAggregator: EventAggregator;
+    private _element: HTMLElement;
+    private _layerFactory: LayerFactory;
 
-    private mapInit: Promise<any>;
+    private _mapInit: Promise<any>;
 
-    private mapInitResolve: Function;
-    private mapInitReject: Function;
-    private eventsBound: Promise<any>;
-    private eventsBoundResolve: Function;
-    private eventsBoundReject: Function;
+    private _mapInitResolve: Function;
+    private _mapInitReject: Function;
+    private _eventsBound: Promise<any>;
+    private _eventsBoundResolve: Function;
+    private _eventsBoundReject: Function;
 
-    private defaultMapOptions = {
+    private _defaultMapOptions: MapOptions = {
         center: {
             lat: 47.3686498,
             lng: 8.53918250
         },
-        zoomLevel: 13
+        zoom: 13
     };
     
-    @bindable mapEvents: string[]
-    @bindable mapOptions: MapOptions;
-    @bindable withLayerControl: boolean;
-    @bindable withScaleControl: boolean;
-
-    map: Map
-
-    attachedLayers: { base: LayersObject, overlay: LayersObject; };
-
     constructor(pEventAgg: EventAggregator, pElement: HTMLElement) {
-        this.eventAggregator = pEventAgg;
-        this.element = pElement;
+        this._eventAggregator = pEventAgg;
+        this._element = pElement;
 
-        this.layerFactory = new LayerFactory();
+        this._layerFactory = new LayerFactory();
 
-        this.mapInit = new Promise((resolve, reject) => {
-            this.mapInitResolve = resolve;
-            this.mapInitReject = reject;
+        this._mapInit = new Promise((resolve, reject) => {
+            this._mapInitResolve = resolve;
+            this._mapInitReject = reject;
         });
 
-        this.eventsBound = new Promise((resolve, reject) => {
-            this.eventsBoundResolve = resolve;
-            this.eventsBoundReject = reject;
+        this._eventsBound = new Promise((resolve, reject) => {
+            this._eventsBoundResolve = resolve;
+            this._eventsBoundReject = reject;
         });
 
-        this.mapOptions = this.defaultMapOptions;
+        this.mapOptions = this._defaultMapOptions;
 
 /* {
             base: [
@@ -74,6 +65,20 @@ export class AULeafletCustomElement {
         }; */
     }
 
+    
+    @bindable 
+    public mapEvents: string[]
+    @bindable 
+    public mapOptions: MapOptions;
+    @bindable 
+    public withLayerControl: boolean;
+    @bindable 
+    public withScaleControl: boolean;
+
+    public map: Map
+
+    public attachedLayers: { base: LayersObject, overlay: LayersObject; };
+
     public layerControl: LayersControl;
 
     public scaleControl : ScaleControl;
@@ -87,9 +92,9 @@ export class AULeafletCustomElement {
     }
 
     mapOptionsChanged(newOptions: MapOptions, oldOptions: MapOptions) {
-        this.mapOptions = Object.assign(this.defaultMapOptions, newOptions);
+        this.mapOptions = Object.assign(this._defaultMapOptions, newOptions);
         // some options can get set on the map object after init
-        this.mapInit.then(() => {
+        this._mapInit.then(() => {
             if (oldOptions) {
                 if (this.mapOptions.center !== oldOptions.center) {
                     this.map.setView(this.mapOptions.center, this.mapOptions.zoom);
@@ -103,10 +108,10 @@ export class AULeafletCustomElement {
     }
 
     mapEventsChanged(newEvents, oldEvents) {
-        this.mapInit.then(() => {
+        this._mapInit.then(() => {
             if (newEvents && newEvents.length) {
                 for (let eventName of newEvents) {
-                    this.map.on(eventName, (e) => this.eventAggregator.publish("aurelia-leaflet", Object.assign(e, { map: this.map })));
+                    this.map.on(eventName, (e) => this._eventAggregator.publish("aurelia-leaflet", Object.assign(e, { map: this.map })));
                 }
             }
             if (oldEvents !== null) {
@@ -115,19 +120,19 @@ export class AULeafletCustomElement {
                 }
             }
             
-            this.eventsBoundResolve();
+            this._eventsBoundResolve();
         });
     }
 
     withLayerControlChanged(newValue) {
         if (newValue === false) {
-            this.mapInit.then(() => {
+            this._mapInit.then(() => {
                 if (this.layerControl) {
                     this.map.removeControl(this.layerControl);
                 }
             });
         } else {
-            this.mapInit.then(() => {
+            this._mapInit.then(() => {
                 if (this.layerControl) {
                     this.map.removeControl(this.layerControl);
                 }
@@ -138,13 +143,13 @@ export class AULeafletCustomElement {
 
     withScaleControlChanged(newValue) {
         if (newValue === false) {
-            this.mapInit.then(() => {
+            this._mapInit.then(() => {
                 if (this.scaleControl) {
                     this.map.removeControl(this.scaleControl);
                 }
             });
         } else {
-            this.mapInit.then(() => {
+            this._mapInit.then(() => {
                 if (this.scaleControl) {
                     this.map.removeControl(this.scaleControl);
                 }
@@ -161,21 +166,21 @@ export class AULeafletCustomElement {
             var center = this.mapOptions.center;
             delete this.mapOptions.center;
             if (!this.map) {
-                this.map = new Map(this.element.firstElementChild as HTMLElement, this.mapOptions);
+                this.map = new Map(this._element.firstElementChild as HTMLElement, this.mapOptions);
             }
             this.mapOptions.center = center;
 
             if (this.map) {
-                this.mapInitResolve();
+                this._mapInitResolve();
             } else {
-                this.mapInitReject();
+                this._mapInitReject();
                 reject();
             }
 
             resolve();
 
             if (this.mapEvents) {
-                this.eventsBound.then(() => {
+                this._eventsBound.then(() => {
                     this.map.setView(this.mapOptions.center, this.mapOptions.zoom);
                 });
             } else {
@@ -191,15 +196,15 @@ export class AULeafletCustomElement {
         };
         if (this.layers.hasOwnProperty("base")) {
             for (let layer of this.layers.base) {
-                layersToAttach.base[this.getLayerId(layer)] = this.layerFactory.getLayer(layer);
+                layersToAttach.base[this.getLayerId(layer)] = this._layerFactory.getLayer(layer);
             }
         }
         if (this.layers.hasOwnProperty("overlay")) {
             for (let layer of this.layers.overlay) {
-                layersToAttach.overlay[this.getLayerId(layer)] = this.layerFactory.getLayer(layer);
+                layersToAttach.overlay[this.getLayerId(layer)] = this._layerFactory.getLayer(layer);
             }
         }
-        this.mapInit.then(() => {
+        this._mapInit.then(() => {
             for (let layerId in layersToAttach.base) {
                 this.attachedLayers.base[layerId] = layersToAttach.base[layerId].addTo(this.map);
             }
@@ -227,7 +232,7 @@ export class AULeafletCustomElement {
         });
 
         for (let removedLayer of removedLayers) {
-            this.mapInit.then(() => {
+            this._mapInit.then(() => {
                 let id = this.getLayerId(removedLayer);
                 if (this.attachedLayers[type].hasOwnProperty(id)) {
                     this.map.removeLayer(this.attachedLayers[type][id]);
