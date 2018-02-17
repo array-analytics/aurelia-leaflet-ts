@@ -2,8 +2,10 @@ import { customElement } from "aurelia-framework";
 import { EventAggregator } from "aurelia-event-aggregator";
 import { autoinject } from "aurelia-dependency-injection";
 import { bindable } from "aurelia-templating/dist/aurelia-templating";
-import { Map, MapOptions, Layer } from "leaflet";
+import { Map, MapOptions, LayersObject, LayersControl, ScaleControl, createLayersControl, createScaleControl } from "leaflet";
 import LayerFactory from "./layer-factory";
+import { AureliaLeafletException } from "./au-leaflet-exception";
+import { LeafLayer } from "../custom_typings/leaflet.d";
 
 
 @autoinject()
@@ -22,20 +24,6 @@ export class AULeafletCustomElement {
     private eventsBoundResolve: Function;
     private eventsBoundReject: Function;
 
-    private defaultLayers = {
-        base: [
-            {
-                id: "OSM Tiles",
-                type: "tile",
-                url: "http://{s}.tile.osm.org/{z}/{x}/{y}.png",
-                options: {
-                    attribution: "&copy; <a href=\"http://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
-                }
-            }
-        ],
-        overlay: []
-    };
-
     private defaultMapOptions = {
         center: {
             lat: 47.3686498,
@@ -43,9 +31,7 @@ export class AULeafletCustomElement {
         },
         zoomLevel: 13
     };
-
-
-    @bindable layers: { base: any[], overlay: any[] }
+    
     @bindable mapEvents: string[]
     @bindable mapOptions: MapOptions;
     @bindable withLayerControl: boolean;
@@ -53,7 +39,7 @@ export class AULeafletCustomElement {
 
     map: Map
 
-    attachedLayers: { base: any[], overlay: any[] };
+    attachedLayers: { base: LayersObject, overlay: LayersObject; };
 
     constructor(pEventAgg: EventAggregator, pElement: HTMLElement) {
         this.eventAggregator = pEventAgg;
@@ -73,8 +59,24 @@ export class AULeafletCustomElement {
 
         this.mapOptions = this.defaultMapOptions;
 
-        this.layers = this.defaultLayers;
+/* {
+            base: [
+                {
+                    id: "OSM Tiles",
+                    type: "tile",
+                    url: "http://{s}.tile.osm.org/{z}/{x}/{y}.png",
+                    options: {
+                        attribution: "&copy; <a href=\"http://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
+                    }
+                }
+            ],
+            overlay: []
+        }; */
     }
+
+    public layerControl: LayersControl;
+
+    public scaleControl : ScaleControl;
 
     layersChanged(newLayers: any, oldLayers: any) {
         if (oldLayers && oldLayers !== null) {
@@ -86,7 +88,6 @@ export class AULeafletCustomElement {
 
     mapOptionsChanged(newOptions: MapOptions, oldOptions: MapOptions) {
         this.mapOptions = Object.assign(this.defaultMapOptions, newOptions);
-
         // some options can get set on the map object after init
         this.mapInit.then(() => {
             if (oldOptions) {
@@ -113,9 +114,8 @@ export class AULeafletCustomElement {
                     this.map.off(removedEvent);
                 }
             }
-            if (!this.eventsBound.resolved) {
-                this.eventsBoundResolve();
-            }
+            
+            this.eventsBoundResolve();
         });
     }
 
@@ -131,7 +131,7 @@ export class AULeafletCustomElement {
                 if (this.layerControl) {
                     this.map.removeControl(this.layerControl);
                 }
-                this.layerControl = this.L.control.layers(this.attachedLayers.base, this.attachedLayers.overlay, newValue).addTo(this.map);
+                this.layerControl = createLayersControl(this.attachedLayers.base, this.attachedLayers.overlay, newValue).addTo(this.map);
             });
         }
     }
@@ -148,7 +148,8 @@ export class AULeafletCustomElement {
                 if (this.scaleControl) {
                     this.map.removeControl(this.scaleControl);
                 }
-                this.scaleControl = this.L.control.scale(newValue).addTo(this.map);
+
+                this.scaleControl = createScaleControl(newValue).addTo(this.map);
             });
         }
     }
@@ -160,7 +161,7 @@ export class AULeafletCustomElement {
             var center = this.mapOptions.center;
             delete this.mapOptions.center;
             if (!this.map) {
-                this.map = new this.L.map(this.mapContainer, this.mapOptions);
+                this.map = new Map(this.element.firstElementChild as HTMLElement, this.mapOptions);
             }
             this.mapOptions.center = center;
 
@@ -175,10 +176,10 @@ export class AULeafletCustomElement {
 
             if (this.mapEvents) {
                 this.eventsBound.then(() => {
-                    this.map.setView([this.mapOptions.center.lat, this.mapOptions.center.lng], this.mapOptions.zoomLevel);
+                    this.map.setView(this.mapOptions.center, this.mapOptions.zoom);
                 });
             } else {
-                this.map.setView([this.mapOptions.center.lat, this.mapOptions.center.lng], this.mapOptions.zoomLevel);
+                this.map.setView(this.mapOptions.center, this.mapOptions.zoom);
             }
         });
     }
@@ -236,10 +237,10 @@ export class AULeafletCustomElement {
         }
     }
 
-    getLayerId(layer) {
+    getLayerId(layer: LeafLayer) {
         let id = layer.id ? layer.id : layer.url;
         if (!id) {
-            throw new AureliaLeafletException("Not possible to get id for layer. Set the id property");
+            throw new AureliaLeafletException("Not possible to get id for layer. Set the id or url property");
         }
         return id;
     }
