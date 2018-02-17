@@ -1,7 +1,6 @@
-import { customElement } from "aurelia-framework";
 import { EventAggregator } from "aurelia-event-aggregator";
 import { autoinject } from "aurelia-dependency-injection";
-import { bindable } from "aurelia-templating/dist/aurelia-templating";
+import { bindable, customElement } from "aurelia-templating";
 import { Map, MapOptions, LayersObject, LayersControl, ScaleControl, createLayersControl, createScaleControl } from "leaflet";
 import LayerFactory from "./layer-factory";
 import { AureliaLeafletException } from "./au-leaflet-exception";
