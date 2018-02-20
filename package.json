@@ -125,6 +125,6 @@
     "semantic-release": "^7.0.2",
     "ts-jest": "^22.0.4",
     "tslint": "^5.6.0",
-    "typescript": "2.4.2"
+    "typescript": "^2.6.1"
   }
 }

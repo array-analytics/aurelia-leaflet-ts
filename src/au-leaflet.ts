@@ -15,7 +15,7 @@ import { bindingMode } from "aurelia-binding";
 export class AULeafletCustomElement {
 
     private _eventAggregator: EventAggregator;
-
+    
     private _layerFactory: LayerFactory;
 
     private _mapInit: Promise<any>;
@@ -36,7 +36,7 @@ export class AULeafletCustomElement {
 
     constructor(pEventAgg: EventAggregator) {
         this._eventAggregator = pEventAgg;
-
+        
         this._layerFactory = new LayerFactory();
 
         this._mapInit = new Promise((resolve, reject) => {
@@ -52,11 +52,11 @@ export class AULeafletCustomElement {
         this.mapOptions = this._defaultMapOptions;
 
         this.baseLayerConfigs.push({
-            id: "OSM Tiles",
-            url: "http://{s}.tile.osm.org/{z}/{x}/{y}.png",
-            attribution: "&copy; <a href=\"http://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
+                        id: "OSM Tiles",
+                        url: "http://{s}.tile.osm.org/{z}/{x}/{y}.png",
+                            attribution: "&copy; <a href=\"http://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
         });
-
+    
     }
 
     @bindable({ changeHandler: "_baseLayersChanged" })
@@ -229,13 +229,13 @@ export class AULeafletCustomElement {
             if (this.baseLayerConfigs && this.baseLayerConfigs.length) {
                 for (let baseLayerConfig of this.baseLayerConfigs) {
                     this.baseLayers.push(this._layerFactory.getLayer(baseLayerConfig));
-                }
             }
+        }
             if (this.overlayLayerConfigs && this.overlayLayerConfigs.length) {
                 for (let overlayLayerConfig of this.overlayLayerConfigs) {
                     this.overlayLayers.push(this._layerFactory.getLayer(overlayLayerConfig));
-                }
             }
+        }
         });
     }
 
@@ -244,7 +244,7 @@ export class AULeafletCustomElement {
         let baseLayersToRemove = oldLayers.filter((pOldLayer: LayerId) => {
             return this.baseLayers.some((pNewLayer: LayerWithIdInstance) => {
                 return this.getLayerId(pOldLayer) === this.getLayerId(pNewLayer);
-            });
+        });
         });
         let overlayLayersToRemove = oldLayers.filter((pOldLayer: LayerId) => {
             return this.overlayLayers.some((pNewLayer: LayerWithIdInstance) => {
@@ -258,7 +258,7 @@ export class AULeafletCustomElement {
                 this.map.removeLayer(layerInstance);
                 removeLayers(this.baseLayers, layerInstance);
             });
-        }
+                }
 
         for (let removedLayer of overlayLayersToRemove) {
             this._mapInit.then(() => {
@@ -273,7 +273,7 @@ export class AULeafletCustomElement {
             if (layerIndex === -1)
                 throw new AureliaLeafletException(`Expected layer '${pLayerToRemove.id}' not found in source.`);
             pLayersSource.splice(layerIndex, 1);
-        }
+    }
     }
 
     getLayerId(layer: LayerId) {
