@@ -4,11 +4,10 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "type": "npm",
-            "script": "build",
-            "problemMatcher": [
-                "$gulp-tsc"
-            ],
+            "label": "build-all",
+            "type": "shell",
+            "command": "yarn run build",
+            "problemMatcher": "$tsc",
             "group": {
                 "kind": "build",
                 "isDefault": true

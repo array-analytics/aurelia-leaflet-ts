@@ -7,5 +7,7 @@
     "interface-name": [true, "never-prefix"],
     "no-shadowed-variable": false,
     "no-string-literal": false
+  }, "jsRules": {
+      "quotemark": [true, "double"]
   }
 }
