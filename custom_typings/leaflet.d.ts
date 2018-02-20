@@ -8,7 +8,17 @@ module "leaflet" {
 
     export type ScaleControl = L.Control.Scale;
 
-    export type LeafLayer = L.Layer & { id?: string, url?: string };
+    export type LayersOptions = L.Control.LayersOptions;
+
+    export type ScaleOptions = L.Control.ScaleOptions;
+
+    export type LayerId = { id?: string | number, _leaflet_id?: number };
+
+    export type LayerConfig = L.GridLayerOptions & LayerId;
+
+    export type TileLayerConfig = L.TileLayerOptions & LayerConfig & { url?: string };
+
+    export type LayerWithIdInstance = L.Layer & LayerConfig
 
 }
 

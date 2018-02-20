@@ -1,18 +1,21 @@
 import { EventAggregator } from "aurelia-event-aggregator";
 import { autoinject } from "aurelia-dependency-injection";
 import { bindable, customElement } from "aurelia-templating";
-import { Map, MapOptions, LayersObject, LayersControl, ScaleControl, LeafLayer } from "leaflet";
+import {
+    Map, MapOptions, LayersControl, ScaleControl, LayersObject, Layer, LayersOptions, ScaleOptions, TileLayer,
+    TileLayerConfig, LayerConfig, LayerWithIdInstance, LayerId
+} from "leaflet";
 import { LayerFactory } from "./layer-factory";
 import { AureliaLeafletException } from "./au-leaflet-exception";
 import { createLayersControl, createScaleControl } from "./leaflet-ext";
-
+import { bindingMode } from "aurelia-binding";
 
 @autoinject()
 @customElement("au-leaflet")
 export class AULeafletCustomElement {
 
     private _eventAggregator: EventAggregator;
-    
+
     private _layerFactory: LayerFactory;
 
     private _mapInit: Promise<any>;
@@ -33,7 +36,7 @@ export class AULeafletCustomElement {
 
     constructor(pEventAgg: EventAggregator) {
         this._eventAggregator = pEventAgg;
-        
+
         this._layerFactory = new LayerFactory();
 
         this._mapInit = new Promise((resolve, reject) => {
@@ -48,41 +51,36 @@ export class AULeafletCustomElement {
 
         this.mapOptions = this._defaultMapOptions;
 
-        this.layers =
-            {
-                base: [
-                    {
-                        id: "OSM Tiles",
-                        type: "tile",
-                        url: "http://{s}.tile.osm.org/{z}/{x}/{y}.png",
-                        options: {
-                            attribution: "&copy; <a href=\"http://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
-                        }
-                    }
-                ],
-                overlay: []
-            };
-        this.attachedLayers.base = {};
-        this.attachedLayers.overlay = {};
-    
+        this.baseLayerConfigs.push({
+            id: "OSM Tiles",
+            url: "http://{s}.tile.osm.org/{z}/{x}/{y}.png",
+            attribution: "&copy; <a href=\"http://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
+        });
+
     }
 
-    @bindable({ changeHandler: "_layersChanged" })
-    public layers: any;
+    @bindable({ changeHandler: "_baseLayersChanged" })
+    public baseLayerConfigs: Array<TileLayerConfig> = new Array<TileLayerConfig>();
+
+    @bindable({ changeHandler: "_overlayLayersChanged" })
+    public overlayLayerConfigs: Array<LayerConfig> = new Array<LayerConfig>();
+
+    @bindable({ defaultBindingMode: bindingMode.toView })
+    public baseLayers: Array<TileLayer> = new Array<TileLayer>();
+
+    @bindable({ defaultBindingMode: bindingMode.toView })
+    public overlayLayers: Array<Layer> = new Array<Layer>();
 
     @bindable({ changeHandler: "_mapEventsChanged" })
     public mapEvents: string[]
     @bindable({ changeHandler: "_mapOptionsChanged" })
     public mapOptions: MapOptions;
     @bindable
-    public withLayerControl: boolean;
+    public withLayerControl: LayersOptions | false = false;
     @bindable
-    public withScaleControl: any;
+    public withScaleControl: ScaleOptions | false = false;
 
     public map: Map
-
-
-    public attachedLayers: any = {};
 
     public layerControl: LayersControl;
 
@@ -90,10 +88,17 @@ export class AULeafletCustomElement {
 
     public mapContainer: HTMLElement;
 
-    private _layersChanged(newLayers: any, oldLayers: any) {
+    private _baseLayersChanged(newLayers: Array<TileLayerConfig>, oldLayers: Array<TileLayerConfig>) {
         if (oldLayers && oldLayers !== null) {
-            this.removeOldLayers(oldLayers.base, "base");
-            this.removeOldLayers(oldLayers.overlay, "overlay");
+            //let layerIds: Array<ILayerId> = oldLayers.map((pLayer: TileLayerConfig) => { return <ILayerId>{ id: pLayer.id, _leaflet_id: pLayer._leaflet_id }; });
+            this.removeOldLayers(oldLayers);
+        }
+        this.attachLayers();
+    }
+
+    private _overlayLayersChanged(newLayers: Array<LayerConfig>, oldLayers: Array<LayerConfig>) {
+        if (oldLayers && oldLayers !== null) {
+            this.removeOldLayers(oldLayers);
         }
         this.attachLayers();
     }
@@ -131,7 +136,7 @@ export class AULeafletCustomElement {
         });
     }
 
-    withLayerControlChanged(newValue) {
+    withLayerControlChanged(newValue: LayersOptions | false) {
         if (newValue === false) {
             this._mapInit.then(() => {
                 if (this.layerControl) {
@@ -143,12 +148,24 @@ export class AULeafletCustomElement {
                 if (this.layerControl) {
                     this.map.removeControl(this.layerControl);
                 }
-                this.layerControl = createLayersControl(this.attachedLayers.base, this.attachedLayers.overlay, newValue).addTo(this.map);
+                let baseLayersObj: LayersObject = {};
+                for (let baseLayerConfig of this.baseLayerConfigs) {
+                    let layerId = this.getLayerId(baseLayerConfig);
+                    let layerInstance = this.getLayerById(layerId);
+                    baseLayersObj[layerId] = layerInstance;
+                }
+                let overlayLayersObj: LayersObject = {};
+                for (let overlayLayer of this.overlayLayerConfigs) {
+                    let layerId = this.getLayerId(overlayLayer);
+                    let layerInstance = this.getLayerById(layerId);
+                    overlayLayersObj[layerId] = layerInstance;
+                }
+                this.layerControl = createLayersControl(baseLayersObj, overlayLayersObj, newValue).addTo(this.map);
             });
         }
     }
 
-    withScaleControlChanged(newValue) {
+    withScaleControlChanged(newValue: ScaleOptions | false) {
         if (newValue === false) {
             this._mapInit.then(() => {
                 if (this.scaleControl) {
@@ -166,8 +183,11 @@ export class AULeafletCustomElement {
         }
     }
 
-    attached() {
+    private created() {
         this.attachLayers();
+    }
+
+    attached() {
         return new Promise((resolve, reject) => {
             // remove the center option before contructing the map to have a chance to bind to the "load" event
             // first. The "load" event on the map gets fired after center and zoom are set for the first time.
@@ -197,63 +217,69 @@ export class AULeafletCustomElement {
         });
     }
 
+    public getLayerById(pLayerID: string | number): LayerWithIdInstance {
+        let baseLayer = this.baseLayers.find((pLayer: LayerWithIdInstance) => pLayer.id === pLayerID);
+        let overlayLayer = this.overlayLayers.find((pLayer: LayerWithIdInstance) => pLayer.id === pLayerID);
+
+        return baseLayer ? baseLayer : overlayLayer;
+    }
+
     attachLayers() {
-        let layersToAttach = {
-            base: {},
-            overlay: {}
-        };
-        if (this.layers.hasOwnProperty("base")) {
-            for (let layer of this.layers.base) {
-                layersToAttach.base[this.getLayerId(layer)] = this._layerFactory.getLayer(layer);
-            }
-        }
-        if (this.layers.hasOwnProperty("overlay")) {
-            for (let layer of this.layers.overlay) {
-                layersToAttach.overlay[this.getLayerId(layer)] = this._layerFactory.getLayer(layer);
-            }
-        }
         this._mapInit.then(() => {
-            for (let layerId in layersToAttach.base) {
-                this.attachedLayers.base[layerId] = layersToAttach.base[layerId].addTo(this.map);
+            if (this.baseLayerConfigs && this.baseLayerConfigs.length) {
+                for (let baseLayerConfig of this.baseLayerConfigs) {
+                    this.baseLayers.push(this._layerFactory.getLayer(baseLayerConfig));
+                }
             }
-            for (let layerId in layersToAttach.overlay) {
-                this.attachedLayers.overlay[layerId] = layersToAttach.overlay[layerId].addTo(this.map);
+            if (this.overlayLayerConfigs && this.overlayLayerConfigs.length) {
+                for (let overlayLayerConfig of this.overlayLayerConfigs) {
+                    this.overlayLayers.push(this._layerFactory.getLayer(overlayLayerConfig));
+                }
             }
         });
     }
 
-    removeOldLayers(oldLayers, type) {
-        if (!oldLayers || !oldLayers.length) {
-            return;
-        }
-        let removedLayers = oldLayers.filter((oldLayer) => {
-            let removed = true;
-            if (!this.layers.hasOwnProperty(type)) {
-                return true;
-            }
-            for (let newLayer of this.layers[type]) {
-                if (this.getLayerId(newLayer) === this.getLayerId(oldLayer)) {
-                    removed = false;
-                }
-            }
-            return removed;
+    removeOldLayers(oldLayers: Array<LayerId>) {
+
+        let baseLayersToRemove = oldLayers.filter((pOldLayer: LayerId) => {
+            return this.baseLayers.some((pNewLayer: LayerWithIdInstance) => {
+                return this.getLayerId(pOldLayer) === this.getLayerId(pNewLayer);
+            });
+        });
+        let overlayLayersToRemove = oldLayers.filter((pOldLayer: LayerId) => {
+            return this.overlayLayers.some((pNewLayer: LayerWithIdInstance) => {
+                return this.getLayerId(pOldLayer) === this.getLayerId(pNewLayer);
+            });
         });
 
-        for (let removedLayer of removedLayers) {
+        for (let removedLayer of baseLayersToRemove) {
             this._mapInit.then(() => {
-                let id = this.getLayerId(removedLayer);
-                if (this.attachedLayers[type].hasOwnProperty(id)) {
-                    this.map.removeLayer(this.attachedLayers[type][id]);
-                    delete this.attachedLayers[type][this.getLayerId(removedLayer)];
-                }
+                let layerInstance: LayerWithIdInstance = removedLayer as LayerWithIdInstance;
+                this.map.removeLayer(layerInstance);
+                removeLayers(this.baseLayers, layerInstance);
             });
         }
+
+        for (let removedLayer of overlayLayersToRemove) {
+            this._mapInit.then(() => {
+                let layerInstance: LayerWithIdInstance = removedLayer as LayerWithIdInstance;
+                this.map.removeLayer(layerInstance);
+                removeLayers(this.overlayLayers, layerInstance);
+            });
+        }
+
+        function removeLayers(pLayersSource: Array<Layer>, pLayerToRemove: LayerWithIdInstance) {
+            let layerIndex = pLayersSource.indexOf(pLayerToRemove);
+            if (layerIndex === -1)
+                throw new AureliaLeafletException(`Expected layer '${pLayerToRemove.id}' not found in source.`);
+            pLayersSource.splice(layerIndex, 1);
+        }
     }
 
-    getLayerId(layer: LeafLayer) {
-        let id = layer.id ? layer.id : layer.url;
+    getLayerId(layer: LayerId) {
+        let id = layer.id ? layer.id : layer._leaflet_id;
         if (!id) {
-            throw new AureliaLeafletException("Not possible to get id for layer. Set the id or url property");
+            throw new AureliaLeafletException("Not possible to get id for layer. Set the id or verify _leaflet_id property.");
         }
         return id;
     }
