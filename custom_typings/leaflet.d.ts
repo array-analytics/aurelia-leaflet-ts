@@ -8,12 +8,7 @@ module "leaflet" {
 
     export type ScaleControl = L.Control.Scale;
 
-    export let createLayersControl = L.control.layers;
-
-    export let createScaleControl = L.control.scale;
+    export type LeafLayer = L.Layer & { id?: string, url?: string };
 
 }
-
-export type LeafLayer = L.Layer & { id?: string, url?: string };
-
 

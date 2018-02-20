@@ -1,10 +1,10 @@
 import { EventAggregator } from "aurelia-event-aggregator";
 import { autoinject } from "aurelia-dependency-injection";
 import { bindable, customElement } from "aurelia-templating";
-import { Map, MapOptions, LayersObject, LayersControl, ScaleControl, createLayersControl, createScaleControl } from "leaflet";
+import { Map, MapOptions, LayersControl, ScaleControl, LeafLayer } from "leaflet";
 import { LayerFactory } from "./layer-factory";
 import { AureliaLeafletException } from "./au-leaflet-exception";
-import { LeafLayer } from "../custom_typings/leaflet.d";
+import { createLayersControl, createScaleControl } from "./leaflet-ext";
 
 
 @autoinject()
@@ -62,6 +62,9 @@ export class AULeafletCustomElement {
                 ],
                 overlay: []
             };
+        this.attachedLayers.base = {};
+        this.attachedLayers.overlay = {};
+    
     }
 
     @bindable({ changeHandler: "_layersChanged" })
@@ -74,12 +77,12 @@ export class AULeafletCustomElement {
     @bindable
     public withLayerControl: boolean;
     @bindable
-    public withScaleControl: boolean;
+    public withScaleControl: any;
 
     public map: Map
 
 
-    public attachedLayers: { base: any, overlay: any; };
+    public attachedLayers: any = {};
 
     public layerControl: LayersControl;
 
@@ -164,6 +167,7 @@ export class AULeafletCustomElement {
     }
 
     attached() {
+        this.attachLayers();
         return new Promise((resolve, reject) => {
             // remove the center option before contructing the map to have a chance to bind to the "load" event
             // first. The "load" event on the map gets fired after center and zoom are set for the first time.
