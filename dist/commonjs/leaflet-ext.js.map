@@ -1,1 +1,1 @@
-{"version":3,"file":"leaflet-ext.js","sourceRoot":"","sources":["../../../src/leaflet-ext.ts"],"names":[],"mappings":";;AAAA,2BAA6B;AAElB,QAAA,mBAAmB,GAAG,CAAC,CAAC,OAAO,CAAC,MAAM,CAAC;AAEvC,QAAA,kBAAkB,GAAG,CAAC,CAAC,OAAO,CAAC,KAAK,CAAC"}
+{"version":3,"file":"leaflet-ext.js","sourceRoot":"","sources":["../../src/leaflet-ext.ts"],"names":[],"mappings":";;AAAA,2BAA6B;AAElB,QAAA,mBAAmB,GAAG,CAAC,CAAC,OAAO,CAAC,MAAM,CAAC;AAEvC,QAAA,kBAAkB,GAAG,CAAC,CAAC,OAAO,CAAC,KAAK,CAAC"}

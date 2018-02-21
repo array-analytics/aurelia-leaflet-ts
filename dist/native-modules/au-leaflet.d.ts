@@ -1,0 +1,34 @@
+import { EventAggregator } from "aurelia-event-aggregator";
+import { Map, MapOptions, LayersControl, ScaleControl, LeafLayer } from "leaflet";
+import { LayerFactory } from "./layer-factory";
+export declare class AULeafletCustomElement {
+    private _eventAggregator;
+    private _layerFactory;
+    private _mapInit;
+    private _mapInitResolve;
+    private _mapInitReject;
+    private _eventsBound;
+    private _eventsBoundResolve;
+    private _eventsBoundReject;
+    private _defaultMapOptions;
+    constructor(pEventAgg: EventAggregator, pLayerFactory: LayerFactory);
+    layers: any;
+    mapEvents: string[];
+    mapOptions: MapOptions;
+    withLayerControl: boolean;
+    withScaleControl: any;
+    map: Map;
+    attachedLayers: any;
+    layerControl: LayersControl;
+    scaleControl: ScaleControl;
+    mapContainer: HTMLElement;
+    private _layersChanged(newLayers, oldLayers);
+    private _mapOptionsChanged(newOptions, oldOptions);
+    private _mapEventsChanged(newEvents, oldEvents);
+    withLayerControlChanged(newValue: any): void;
+    withScaleControlChanged(newValue: any): void;
+    attached(): Promise<{}>;
+    attachLayers(): void;
+    removeOldLayers(oldLayers: any, type: any): void;
+    getLayerId(layer: LeafLayer): string;
+}

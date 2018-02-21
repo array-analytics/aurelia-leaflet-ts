@@ -31,10 +31,10 @@ export class AULeafletCustomElement {
         zoom: 13
     };
 
-    constructor(pEventAgg: EventAggregator) {
+    constructor(pEventAgg: EventAggregator, pLayerFactory: LayerFactory) {
         this._eventAggregator = pEventAgg;
         
-        this._layerFactory = new LayerFactory();
+        this._layerFactory = pLayerFactory;
 
         this._mapInit = new Promise((resolve, reject) => {
             this._mapInitResolve = resolve;
@@ -203,13 +203,17 @@ export class AULeafletCustomElement {
             overlay: {}
         };
         if (this.layers.hasOwnProperty("base")) {
-            for (let layer of this.layers.base) {
-                layersToAttach.base[this.getLayerId(layer)] = this._layerFactory.getLayer(layer);
+            for (let layerConfig of this.layers.base) {
+                let type = !layerConfig.hasOwnProperty("type") ? "tile" : layerConfig.type;
+                let callbackFn: Function = layerConfig.initCallback === "function" ? layerConfig.initCallback : null;
+                layersToAttach.base[this.getLayerId(layerConfig)] = this._layerFactory.getLayer(layerConfig, type, callbackFn);
             }
         }
         if (this.layers.hasOwnProperty("overlay")) {
-            for (let layer of this.layers.overlay) {
-                layersToAttach.overlay[this.getLayerId(layer)] = this._layerFactory.getLayer(layer);
+            for (let layerConfig of this.layers.overlay) {
+                let type = !layerConfig.hasOwnProperty("type") ? "tile" : layerConfig.type;
+                let callbackFn: Function = layerConfig.initCallback === "function" ? layerConfig.initCallback : null;
+                layersToAttach.overlay[this.getLayerId(layerConfig)] = this._layerFactory.getLayer(layerConfig, type, callbackFn);
             }
         }
         this._mapInit.then(() => {

@@ -15,7 +15,7 @@ import { LayerFactory } from "./layer-factory";
 import { AureliaLeafletException } from "./au-leaflet-exception";
 import { createLayersControl, createScaleControl } from "./leaflet-ext";
 var AULeafletCustomElement = (function () {
-    function AULeafletCustomElement(pEventAgg) {
+    function AULeafletCustomElement(pEventAgg, pLayerFactory) {
         var _this = this;
         this._defaultMapOptions = {
             center: {
@@ -26,7 +26,7 @@ var AULeafletCustomElement = (function () {
         };
         this.attachedLayers = {};
         this._eventAggregator = pEventAgg;
-        this._layerFactory = new LayerFactory();
+        this._layerFactory = pLayerFactory;
         this._mapInit = new Promise(function (resolve, reject) {
             _this._mapInitResolve = resolve;
             _this._mapInitReject = reject;
@@ -164,14 +164,18 @@ var AULeafletCustomElement = (function () {
         };
         if (this.layers.hasOwnProperty("base")) {
             for (var _i = 0, _a = this.layers.base; _i < _a.length; _i++) {
-                var layer = _a[_i];
-                layersToAttach.base[this.getLayerId(layer)] = this._layerFactory.getLayer(layer);
+                var layerConfig = _a[_i];
+                var type = !layerConfig.hasOwnProperty("type") ? "tile" : layerConfig.type;
+                var callbackFn = layerConfig.initCallback === "function" ? layerConfig.initCallback : null;
+                layersToAttach.base[this.getLayerId(layerConfig)] = this._layerFactory.getLayer(layerConfig, type, callbackFn);
             }
         }
         if (this.layers.hasOwnProperty("overlay")) {
             for (var _b = 0, _c = this.layers.overlay; _b < _c.length; _b++) {
-                var layer = _c[_b];
-                layersToAttach.overlay[this.getLayerId(layer)] = this._layerFactory.getLayer(layer);
+                var layerConfig = _c[_b];
+                var type = !layerConfig.hasOwnProperty("type") ? "tile" : layerConfig.type;
+                var callbackFn = layerConfig.initCallback === "function" ? layerConfig.initCallback : null;
+                layersToAttach.overlay[this.getLayerId(layerConfig)] = this._layerFactory.getLayer(layerConfig, type, callbackFn);
             }
         }
         this._mapInit.then(function () {
@@ -246,7 +250,7 @@ var AULeafletCustomElement = (function () {
     AULeafletCustomElement = __decorate([
         autoinject(),
         customElement("au-leaflet"),
-        __metadata("design:paramtypes", [EventAggregator])
+        __metadata("design:paramtypes", [EventAggregator, LayerFactory])
     ], AULeafletCustomElement);
     return AULeafletCustomElement;
 }());
