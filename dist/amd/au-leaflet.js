@@ -11,7 +11,7 @@ define(["require", "exports", "aurelia-event-aggregator", "aurelia-dependency-in
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var AULeafletCustomElement = (function () {
-        function AULeafletCustomElement(pEventAgg) {
+        function AULeafletCustomElement(pEventAgg, pLayerFactory) {
             var _this = this;
             this._defaultMapOptions = {
                 center: {
@@ -22,7 +22,7 @@ define(["require", "exports", "aurelia-event-aggregator", "aurelia-dependency-in
             };
             this.attachedLayers = {};
             this._eventAggregator = pEventAgg;
-            this._layerFactory = new layer_factory_1.LayerFactory();
+            this._layerFactory = pLayerFactory;
             this._mapInit = new Promise(function (resolve, reject) {
                 _this._mapInitResolve = resolve;
                 _this._mapInitReject = reject;
@@ -242,7 +242,7 @@ define(["require", "exports", "aurelia-event-aggregator", "aurelia-dependency-in
         AULeafletCustomElement = __decorate([
             aurelia_dependency_injection_1.autoinject(),
             aurelia_templating_1.customElement("au-leaflet"),
-            __metadata("design:paramtypes", [aurelia_event_aggregator_1.EventAggregator])
+            __metadata("design:paramtypes", [aurelia_event_aggregator_1.EventAggregator, layer_factory_1.LayerFactory])
         ], AULeafletCustomElement);
         return AULeafletCustomElement;
     }());

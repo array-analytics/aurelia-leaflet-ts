@@ -9,7 +9,7 @@
     ],
     "outDir": "dist/commonjs",
     "sourceMap": true,
-    //"declaration": true,
+    "declaration": true,
     "removeComments": true,
     "noImplicitAny": false,
     "noUnusedLocals": false,
@@ -21,7 +21,7 @@
     "experimentalDecorators": true,
     "noEmitHelpers": false,
     "skipLibCheck": true,
-    "allowJs": true
+    "allowJs": false
   },
   "exclude": [
     ".vscode",

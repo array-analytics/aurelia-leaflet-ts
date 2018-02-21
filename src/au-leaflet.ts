@@ -31,10 +31,10 @@ export class AULeafletCustomElement {
         zoom: 13
     };
 
-    constructor(pEventAgg: EventAggregator) {
+    constructor(pEventAgg: EventAggregator, pLayerFactory: LayerFactory) {
         this._eventAggregator = pEventAgg;
         
-        this._layerFactory = new LayerFactory();
+        this._layerFactory = pLayerFactory;
 
         this._mapInit = new Promise((resolve, reject) => {
             this._mapInitResolve = resolve;

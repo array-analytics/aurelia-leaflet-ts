@@ -1,8 +1,25 @@
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+import { inject, All } from "aurelia-dependency-injection";
 import { AureliaLeafletException } from "./au-leaflet-exception";
 import * as L from "leaflet";
+var LeafletLayerFactoryPluginBase = (function () {
+    function LeafletLayerFactoryPluginBase() {
+    }
+    return LeafletLayerFactoryPluginBase;
+}());
+export { LeafletLayerFactoryPluginBase };
 var LayerFactory = (function () {
-    function LayerFactory() {
+    function LayerFactory(pCustomPlugins) {
         this._leafletLib = L;
+        this._customPlugins = pCustomPlugins;
     }
     LayerFactory.prototype.getLayer = function (layer) {
         if (!layer.hasOwnProperty("type")) {
@@ -37,9 +54,6 @@ var LayerFactory = (function () {
             case "polygone":
                 instance = this.getPolygone(layer);
                 break;
-            case "multiPolygone":
-                instance = this.getMultiPolygone(layer);
-                break;
             case "rectangle":
                 instance = this.getRectangle(layer);
                 break;
@@ -59,7 +73,8 @@ var LayerFactory = (function () {
                 instance = this.getGeoJson(layer);
                 break;
             default:
-                throw new AureliaLeafletException("Layer type " + layer.type + " not implemented");
+                var plugin = this._customPlugins.find(function (pPlugin) { return pPlugin.type === layer.type; });
+                return plugin.getLayer(layer.options);
         }
         if (typeof layer.initCallback === "function") {
             layer.initCallback(instance);
@@ -143,12 +158,6 @@ var LayerFactory = (function () {
         }
         return this._leafletLib.polygone(layer.latlngs, layer.options);
     };
-    LayerFactory.prototype.getMultiPolygone = function (layer) {
-        if (!layer.hasOwnProperty("latLngs")) {
-            throw new AureliaLeafletException("No latLngs given for layer.type \"multiPolygone\"");
-        }
-        return this._leafletLib.multiPolygone(layer.latlngs, layer.options);
-    };
     LayerFactory.prototype.getRectangle = function (layer) {
         if (!layer.hasOwnProperty("bounds")) {
             throw new AureliaLeafletException("No bounds given for layer.type \"rectangle\"");
@@ -198,6 +207,10 @@ var LayerFactory = (function () {
         }
         return this._leafletLib.geoJson(layer.data, layer.options);
     };
+    LayerFactory = __decorate([
+        inject(All.of(LeafletLayerFactoryPluginBase)),
+        __metadata("design:paramtypes", [Array])
+    ], LayerFactory);
     return LayerFactory;
 }());
 export { LayerFactory };

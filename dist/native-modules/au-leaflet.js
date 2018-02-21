@@ -15,7 +15,7 @@ import { LayerFactory } from "./layer-factory";
 import { AureliaLeafletException } from "./au-leaflet-exception";
 import { createLayersControl, createScaleControl } from "./leaflet-ext";
 var AULeafletCustomElement = (function () {
-    function AULeafletCustomElement(pEventAgg) {
+    function AULeafletCustomElement(pEventAgg, pLayerFactory) {
         var _this = this;
         this._defaultMapOptions = {
             center: {
@@ -26,7 +26,7 @@ var AULeafletCustomElement = (function () {
         };
         this.attachedLayers = {};
         this._eventAggregator = pEventAgg;
-        this._layerFactory = new LayerFactory();
+        this._layerFactory = pLayerFactory;
         this._mapInit = new Promise(function (resolve, reject) {
             _this._mapInitResolve = resolve;
             _this._mapInitReject = reject;
@@ -246,7 +246,7 @@ var AULeafletCustomElement = (function () {
     AULeafletCustomElement = __decorate([
         autoinject(),
         customElement("au-leaflet"),
-        __metadata("design:paramtypes", [EventAggregator])
+        __metadata("design:paramtypes", [EventAggregator, LayerFactory])
     ], AULeafletCustomElement);
     return AULeafletCustomElement;
 }());
