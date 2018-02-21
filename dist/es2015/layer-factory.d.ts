@@ -18,10 +18,11 @@ export declare abstract class LeafletLayerFactoryPluginBase {
     abstract getLayer<TLayerType extends Layer>(options: any): TLayerType;
 }
 export declare class LayerFactory {
+    private _logger;
     private _leafletLib;
     private _customPlugins;
     constructor(pCustomPlugins: Array<LeafletLayerFactoryPluginBase>);
-    getLayer(layer: any): L.Layer;
+    getLayer(pLayerConfig: any, pType: string, pInitCallback?: Function): L.Layer;
     getMarker(layer: any): Marker;
     getPopup(layer: any): Popup;
     getTile(layer: any): TileLayer;

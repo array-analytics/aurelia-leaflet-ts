@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 import { inject, All } from "aurelia-dependency-injection";
 import { AureliaLeafletException } from "./au-leaflet-exception";
 import * as L from "leaflet";
+import { LogManager } from "aurelia-framework";
 var LeafletLayerFactoryPluginBase = (function () {
     function LeafletLayerFactoryPluginBase() {
     }
@@ -18,69 +19,72 @@ var LeafletLayerFactoryPluginBase = (function () {
 export { LeafletLayerFactoryPluginBase };
 var LayerFactory = (function () {
     function LayerFactory(pCustomPlugins) {
+        this._logger = LogManager.getLogger(LayerFactory_1.name);
         this._leafletLib = L;
         this._customPlugins = pCustomPlugins;
     }
-    LayerFactory.prototype.getLayer = function (layer) {
-        if (!layer.hasOwnProperty("type")) {
-            layer.type = "tile";
-        }
+    LayerFactory_1 = LayerFactory;
+    LayerFactory.prototype.getLayer = function (pLayerConfig, pType, pInitCallback) {
         var instance;
-        switch (layer.type) {
+        switch (pType) {
             case "marker":
-                instance = this.getMarker(layer);
+                instance = this.getMarker(pLayerConfig);
                 break;
             case "popup":
-                instance = this.getPopup(layer);
+                instance = this.getPopup(pLayerConfig);
                 break;
             case "tile":
-                instance = this.getTile(layer);
+                instance = this.getTile(pLayerConfig);
                 break;
             case "wms":
-                instance = this.getWMS(layer);
+                instance = this.getWMS(pLayerConfig);
                 break;
             case "canvas":
-                instance = this.getCanvas(layer);
+                instance = this.getCanvas(pLayerConfig);
                 break;
             case "imageOverlay":
-                instance = this.getImageOverlay(layer);
+                instance = this.getImageOverlay(pLayerConfig);
                 break;
             case "polyline":
-                instance = this.getPolyline(layer);
+                instance = this.getPolyline(pLayerConfig);
                 break;
             case "multiPolyline":
-                instance = this.getMultiPolyline(layer);
+                instance = this.getMultiPolyline(pLayerConfig);
                 break;
             case "polygone":
-                instance = this.getPolygone(layer);
+                instance = this.getPolygone(pLayerConfig);
                 break;
             case "rectangle":
-                instance = this.getRectangle(layer);
+                instance = this.getRectangle(pLayerConfig);
                 break;
             case "circle":
-                instance = this.getCircle(layer);
+                instance = this.getCircle(pLayerConfig);
                 break;
             case "circleMarker":
-                instance = this.getCircleMarker(layer);
+                instance = this.getCircleMarker(pLayerConfig);
                 break;
             case "group":
-                instance = this.getLayerGroup(layer);
+                instance = this.getLayerGroup(pLayerConfig);
                 break;
             case "featureGroup":
-                instance = this.getFeatureGroup(layer);
+                instance = this.getFeatureGroup(pLayerConfig);
                 break;
             case "geoJSON":
-                instance = this.getGeoJson(layer);
+                instance = this.getGeoJson(pLayerConfig);
                 break;
             default:
-                var plugin = this._customPlugins.find(function (pPlugin) { return pPlugin.type === layer.type; });
-                return plugin.getLayer(layer.options);
+                var plugin = this._customPlugins.find(function (pPlugin) { return pPlugin.type === pType; });
+                if (!plugin) {
+                    this._logger.error("Layer type " + pType + " not implemented");
+                    throw new AureliaLeafletException("Layer type " + pType + " not implemented");
+                }
+                instance = plugin.getLayer(pLayerConfig.options);
         }
-        if (typeof layer.initCallback === "function") {
-            layer.initCallback(instance);
+        if (pInitCallback) {
+            pInitCallback(instance);
         }
-        if (layer.hasOwnProperty("events")) {
-            for (var _i = 0, _a = layer.events; _i < _a.length; _i++) {
+        if (pLayerConfig.hasOwnProperty("events")) {
+            for (var _i = 0, _a = pLayerConfig.events; _i < _a.length; _i++) {
                 var e = _a[_i];
                 if (typeof instance.on === "function") {
                     instance.on(e.name, e.callback);
@@ -186,7 +190,7 @@ var LayerFactory = (function () {
         var layers = [];
         for (var _i = 0, _a = layer.layers; _i < _a.length; _i++) {
             var l = _a[_i];
-            layers.push(this.getLayer(l));
+            layers.push(this.getLayer(l, l.type, l.initCallback));
         }
         return this._leafletLib.layerGroup(layers);
     };
@@ -197,7 +201,7 @@ var LayerFactory = (function () {
         var layers = [];
         for (var _i = 0, _a = layer.layers; _i < _a.length; _i++) {
             var l = _a[_i];
-            layers.push(this.getLayer(l));
+            layers.push(this.getLayer(l, l.type, l.initCallback));
         }
         return this._leafletLib.featureGroup(layers);
     };
@@ -207,11 +211,12 @@ var LayerFactory = (function () {
         }
         return this._leafletLib.geoJson(layer.data, layer.options);
     };
-    LayerFactory = __decorate([
+    LayerFactory = LayerFactory_1 = __decorate([
         inject(All.of(LeafletLayerFactoryPluginBase)),
         __metadata("design:paramtypes", [Array])
     ], LayerFactory);
     return LayerFactory;
+    var LayerFactory_1;
 }());
 export { LayerFactory };
 //# sourceMappingURL=layer-factory.js.map
